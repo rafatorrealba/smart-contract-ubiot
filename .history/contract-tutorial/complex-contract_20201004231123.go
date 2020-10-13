@@ -374,7 +374,7 @@ func (cc *ComplexContract) MachineInMaintenance(ctx CustomTransactionContextInte
 	}
 
 	// Updating the state of the machine
-	ba.SetStatusInMaintenance()
+	ba.SetStatusInConpany()
 
 	// Changing GO structure to JSON format
 	baBytes, _ := json.MarshalIndent(ba, "", "  ")
