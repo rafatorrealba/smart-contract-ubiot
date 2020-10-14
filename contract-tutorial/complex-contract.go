@@ -26,7 +26,7 @@ var walletKeyIndex uint64 = 4
 var amount uint64 = 0
 
 // NewMachine function adds a new basic machine to the world state using id as key
-func (cc *ComplexContract) NewMachine(ctx CustomTransactionContextInterface, id string, owner Owner, reserveprice uint64, workedhours uint64, priceperhour uint64) error {
+func (cc *ComplexContract) NewMachine(ctx CustomTransactionContextInterface, id string, lessor string, reserveprice uint64, workedhours uint64, priceperhour uint64) error {
 	existing := ctx.GetData()
 
 	if existing != nil {
@@ -36,7 +36,7 @@ func (cc *ComplexContract) NewMachine(ctx CustomTransactionContextInterface, id 
 	// Assinging all features of a new Machine
 	ba := new(BasicMachine)
 	ba.ID = id
-	ba.Owner = owner
+	ba.Lessor = lessor
 	ba.ReservePrice = reserveprice
 	ba.PricePerHour = priceperhour
 	ba.SetLessee()

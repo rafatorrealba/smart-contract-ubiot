@@ -1,15 +1,15 @@
 package main
 
 // Owner structure contains the name of the Company and the name of the Lessor of the basic machine
-type Owner struct {
-	Company string `json:"company"`
-	Lessor  string `json:"lessor"`
-}
+//type Owner struct {
+//	Company string `json:"company"`
+//	Lessor  string `json:"lessor"`
+//}
 
 // BasicMachine structure contains all the features of a basic machine
 type BasicMachine struct {
 	ID              string `json:"id"`
-	Owner           Owner  `json:"owner"`
+	Lessor          string `json:"lessor"`
 	Status          string `json:"status"`
 	ReservePrice    uint64 `json:"reserveprice"`
 	WorkedHours     uint64 `json:"workedhours"`
