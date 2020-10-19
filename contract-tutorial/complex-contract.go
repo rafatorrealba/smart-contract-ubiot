@@ -2,15 +2,18 @@ package main
 
 // Importing modules
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
-
+	"errors"
+	"strings"
+    "net/http"
+    "io/ioutil"
+	"encoding/json"
+	
+//	"github.com/iotaledger/iota.go/consts"
+//	"github.com/iotaledger/iota.go/address"
+	"github.com/rafatorrealba/hlf-iota-conector/iota" 			// Module of IOTA Connector
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/iotaledger/iota.go/address"
-	"github.com/iotaledger/iota.go/consts"
-	"github.com/rafatorrealba/hlf-iota-conector/iota" // Module of IOTA Connector
 )
 
 // ComplexContract contract for handling BasicMachines
@@ -19,11 +22,13 @@ type ComplexContract struct {
 }
 
 //Constants and variables
-const walletSeed1 = "XP9ATINAUBHOURCEBVXVORWWRMNIVYIMZRSEV9HYWNMADLIERCI9LYRODBDIXBTEEMMVCELHJUATNJJD9"
-const walletSeed2 = "FBBNBNBQPGVFLGNPDNJZVYN9CJO9BGUAALXCJMWTDHIDOR9HOOBRHEYANQDVFKWPXWRPNLMTYJ9LCJFLD"
-
-var walletKeyIndex uint64 = 4
+var walletSeed1 string
+var walletSeed2 string
+var walletAddress1 string
+var walletAddress2 string
+var walletKeyIndex uint64 = 0
 var amount uint64 = 0
+var WalletCreated = false
 
 // NewMachine function adds a new basic machine to the world state using id as key
 func (cc *ComplexContract) NewMachine(ctx CustomTransactionContextInterface, id string, lessor string, reserveprice uint64, workedhours uint64, priceperhour uint64) error {
@@ -65,7 +70,6 @@ func (cc *ComplexContract) NewMachine(ctx CustomTransactionContextInterface, id 
 	fmt.Println(timestamp, "New machine:", ba.ID, "Root:", root, mamState, seed)                      // Printing logs
 
 	return nil //Original return.
-	//return shim.Success(nil) //New return of IOTA. Actually unused.
 }
 
 // ReserveMachine function changes the Machine status to Reserved and assings a Lessee
@@ -90,10 +94,9 @@ func (cc *ComplexContract) ReserveMachine(ctx CustomTransactionContextInterface,
 	}
 
 	//IOTA Transfer
-	walletAddress, err := address.GenerateAddress(walletSeed2, 0, consts.SecurityLevelMedium, true)
-	amount = ba.ReservePrice                                                               // Assinging the reserved price as amount to transfer
-	newKeyIndex := iota.TransferTokens(walletSeed1, walletKeyIndex, walletAddress, amount) // Init transfer and get new key index
-	walletKeyIndex = newKeyIndex                                                           // Assinging the new index to current index
+	amount = ba.ReservePrice                                                               	// Assinging the reserved price as amount to transfer
+	newKeyIndex := iota.TransferTokens(walletSeed1, walletKeyIndex, walletAddress2, amount) // Init transfer and get new key index
+	walletKeyIndex = newKeyIndex                                                           	// Assinging the new index to current index
 
 	// Updating the state of the machine
 	ba.Lessee = lesseeAdd
@@ -229,10 +232,9 @@ func (cc *ComplexContract) PayPerUse(ctx CustomTransactionContextInterface, id s
 	}
 
 	//IOTA transfer
-	walletAddress, err := address.GenerateAddress(walletSeed2, 0, consts.SecurityLevelMedium, true)
-	amount = ba.PricePerHour * workhoursAdd                                                // Assinging the reserved price as amount to transfer
-	newKeyIndex := iota.TransferTokens(walletSeed1, walletKeyIndex, walletAddress, amount) // Init transfer and get new key index
-	walletKeyIndex = newKeyIndex                                                           // Assinging the new index to current index
+	amount = ba.PricePerHour * workhoursAdd                                                 // Assinging the reserved price as amount to transfer
+	newKeyIndex := iota.TransferTokens(walletSeed1, walletKeyIndex, walletAddress2, amount) // Init transfer and get new key index
+	walletKeyIndex = newKeyIndex                                                            // Assinging the new index to current index
 
 	// Updating the state of the machine
 	ba.SetStatusWorking()
@@ -527,6 +529,12 @@ func (cc *ComplexContract) GetMachine(ctx CustomTransactionContextInterface, id 
 		return nil, fmt.Errorf("Cannot read world state pair with key %s. Does not exist", id)
 	}
 
+	if WalletCreated == false {
+		walletSeed1, walletAddress1, walletSeed2, walletAddress2 = Wallet()
+		WalletCreated = true
+		time.Sleep(5 * time.Second)
+	}
+
 	ba := new(BasicMachine)
 	err := json.Unmarshal(existing, ba)
 
@@ -535,6 +543,46 @@ func (cc *ComplexContract) GetMachine(ctx CustomTransactionContextInterface, id 
 	}
 
 	return ba, nil
+}
+
+func Wallet() (string, string, string, string) {
+    
+    walletAddress1, walletSeed1 := iota.CreateWallet()
+    walletAddress2, walletSeed2 := iota.CreateWallet()
+
+    timestamp := time.Now().String()[0:19]
+    fmt.Println(timestamp, "\nSeed 1: ", walletSeed1, "\nAddr 1: ", walletAddress1)
+    fmt.Println("\nSeed 2: ", walletSeed2, "\nAddr 2: ", walletAddress2)
+    
+    requestBody := strings.NewReader(
+		`{"address":"` + string(walletAddress1) + `",` +
+        `"value":"1000000",` +
+        `"message":"EINFACHIOTA",` +
+        `"tag":"EINFACHIOTA"}`,
+    )
+    
+    // post some data
+    res, err := http.Post(
+    "https://faucet.comnet.einfachiota.de/pay_tokens",
+    "application/json; charset=UTF-8",
+    requestBody,
+    )
+
+    // Handling errors
+    if err != nil {
+    fmt.Println(err)
+    }
+
+    // read response data
+    data, _ := ioutil.ReadAll( res.Body )
+
+    // close response body
+    res.Body.Close()
+
+    // print response body
+	fmt.Printf( "\n%s\n", data )
+
+	return walletSeed1, walletAddress1, walletSeed2, walletAddress2
 }
 
 // GetEvaluateTransactions returns functions of ComplexContract not to be tagged as submit
