@@ -30,7 +30,7 @@ github.com/hyperledger/fabric-chaincode-go/pkg/attrmgr
 github.com/hyperledger/fabric-chaincode-go/pkg/cid
 github.com/hyperledger/fabric-chaincode-go/shim
 github.com/hyperledger/fabric-chaincode-go/shim/internal
-# github.com/hyperledger/fabric-contract-api-go v1.1.0
+# github.com/hyperledger/fabric-contract-api-go v1.1.1
 github.com/hyperledger/fabric-contract-api-go/contractapi
 github.com/hyperledger/fabric-contract-api-go/contractapi/utils
 github.com/hyperledger/fabric-contract-api-go/internal
@@ -74,7 +74,7 @@ github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/rafatorrealba/hlf-iota-conector v0.0.0-20201002151248-7d8f17f03c90
+# github.com/rafatorrealba/hlf-iota-conector v0.0.0-20201119180109-b53b01c0e84b
 github.com/rafatorrealba/hlf-iota-conector/iota
 # github.com/rogpeppe/go-internal v1.3.0
 github.com/rogpeppe/go-internal/modfile
